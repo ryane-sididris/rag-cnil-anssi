@@ -28,8 +28,18 @@ def build_prompt(question, chunks):
         f"[{i}] ({c['doc']}, p. {c['page']})\n{c['content']}"
         for i, c in enumerate(chunks, start=1)
     )
-    return f"Extraits :\n\n{context}\n\nQuestion : {question}"
-
+    # consignes répétées en fin de message : les petits modèles suivent mieux
+    # ce qui est juste avant la réponse
+    return (
+        f"Extraits :\n\n{context}\n\n"
+        f"Question : {question}\n\n"
+        "Consignes : réponds en 5 points maximum, sans répétition. "
+        "Chaque point commence par un tiret et se termine par le numéro de l'extrait "
+        "qui le justifie. Exemple de format (sur un autre sujet) :\n"
+        "- Les sauvegardes doivent être testées régulièrement [2]\n"
+        "Un même numéro peut servir plusieurs fois. "
+        f"Si les extraits ne contiennent pas la réponse, écris seulement : « {NOT_FOUND} »"
+    )
 
 def answer(conn, question, mode="hybrid", k=config.TOP_K):
     chunks = search(conn, question, mode, k)
