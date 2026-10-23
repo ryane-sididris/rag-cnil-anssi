@@ -1,0 +1,5 @@
+ollama
+pymupdf
+psycopg[binary]
+pgvector
+numpy
