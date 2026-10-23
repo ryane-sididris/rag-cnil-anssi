@@ -8,6 +8,7 @@ Assistant de questions-réponses sur des guides publics de la CNIL et de l'ANSSI
 - [ ] Recherche hybride (vectorielle + plein texte)
 - [ ] Génération avec citation des sources
 - [ ] Évaluation sur un jeu de questions de test
+- [ ] Comparaison du modèle local (Ollama) avec un modèle via API, sur le même jeu de test
 
 ## Installation
 
