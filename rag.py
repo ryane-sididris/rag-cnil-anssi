@@ -2,6 +2,7 @@
 
 python rag.py "Comment sécuriser les mots de passe ?"
 """
+import re
 import sys
 
 import psycopg
@@ -41,6 +42,7 @@ def build_prompt(question, chunks):
         f"Si les extraits ne contiennent pas la réponse, écris seulement : « {NOT_FOUND} »"
     )
 
+
 def answer(conn, question, mode="hybrid", k=config.TOP_K):
     chunks = search(conn, question, mode, k)
     if not chunks:
@@ -50,6 +52,12 @@ def answer(conn, question, mode="hybrid", k=config.TOP_K):
         {"role": "user", "content": build_prompt(question, chunks)},
     ]
     return llm.chat(messages), chunks
+
+
+def cited_numbers(reply, chunks):
+    """Numéros d'extraits cités dans la réponse, en ignorant ceux qui n'existent pas."""
+    numbers = {int(n) for n in re.findall(r"\[(\d+)\]", reply)}
+    return sorted(n for n in numbers if 1 <= n <= len(chunks))
 
 
 def connect():
@@ -63,5 +71,5 @@ if __name__ == "__main__":
     with connect() as conn:
         reply, chunks = answer(conn, question)
     print(reply, "\n")
-    for i, c in enumerate(chunks, start=1):
-        print(f"[{i}] {c['doc']}, p. {c['page']}")
+    for n in cited_numbers(reply, chunks):
+        print(f"[{n}] {chunks[n - 1]['doc']}, p. {chunks[n - 1]['page']}")
