@@ -1,65 +1,110 @@
-"""Recherche des chunks : vectorielle, plein texte, ou hybride (fusion RRF)."""
+"""Recherche des chunks : vectorielle, plein texte, ou hybride (fusion RRF).
+
+python search.py "Comment sécuriser les mots de passe ?"            # mode hybride, TOP_K chunks
+python search.py --mode keyword --k 10 "Comment sécuriser le wifi ?"
+
+Les scores servent seulement à classer les chunks d'une même recherche : ils ne sont pas
+comparables d'un mode à l'autre (similarité cosinus, rang plein texte, score RRF).
+"""
+import argparse
+
 import numpy as np
 import ollama
+import psycopg
+from pgvector.psycopg import register_vector
 
 import config
 
 MODES = ("hybrid", "vector", "keyword")
+COLONNES = "chunk_id, document_id, title, source, page, sections, text"
+
+_conn = None
 
 
-def embed_query(question):
-    vec = ollama.embed(model=config.EMBED_MODEL, input=question)["embeddings"][0]
-    return np.array(vec, dtype=np.float32)
+def connect():
+    """Connexion unique à la base, ouverte au premier appel."""
+    global _conn
+    if _conn is None or _conn.closed:
+        _conn = psycopg.connect(config.DB_URL, autocommit=True)
+        register_vector(_conn)
+    return _conn
 
 
 def _to_dicts(rows):
     return [
-        {"id": r[0], "doc": r[1], "page": r[2], "content": r[3], "score": float(r[4])}
+        {"score": float(r[7]), "chunk_id": r[0], "document_id": r[1], "title": r[2], "source": r[3],
+         "page": r[4], "sections": r[5], "text": r[6]}
         for r in rows
     ]
 
 
-def vector_search(conn, question, k):
-    q = embed_query(question)
-    rows = conn.execute(
-        "SELECT id, doc, page, content, 1 - (embedding <=> %s) AS score "
+def embed_query(query):
+    vec = ollama.embed(model=config.EMBED_MODEL, input=query)["embeddings"][0]
+    return np.array(vec, dtype=np.float32)
+
+
+def vector_search(query, k):
+    """Similarité cosinus entre la question et les chunks (bge-m3)."""
+    q = embed_query(query)
+    rows = connect().execute(
+        f"SELECT {COLONNES}, 1 - (embedding <=> %s) AS score "
         "FROM chunks ORDER BY embedding <=> %s LIMIT %s",
         (q, q, k),
     ).fetchall()
     return _to_dicts(rows)
 
 
-def keyword_search(conn, question, k):
-    # plainto_tsquery relie les mots par ET : on les relie par OU pour ne pas
-    # exiger que tous les mots de la question soient dans le même chunk
-    rows = conn.execute(
+def keyword_search(query, k):
+    """Recherche plein texte PostgreSQL (racinisation française, mots vides retirés).
+
+    plainto_tsquery relie les mots par ET : on les relie par OU pour ne pas exiger
+    que tous les mots de la question soient dans le même chunk.
+    """
+    rows = connect().execute(
         "WITH q AS (SELECT to_tsquery('french', "
         "    replace(plainto_tsquery('french', %s)::text, ' & ', ' | ')) AS query) "
-        "SELECT id, doc, page, content, ts_rank_cd(tsv, q.query) AS score "
+        f"SELECT {COLONNES}, ts_rank_cd(tsv, q.query) AS score "
         "FROM chunks, q WHERE tsv @@ q.query ORDER BY score DESC LIMIT %s",
-        (question, k),
+        (query, k),
     ).fetchall()
     return _to_dicts(rows)
 
 
-def hybrid_search(conn, question, k, pool=20, rrf_k=60):
+def hybrid_search(query, k, pool=20, rrf_k=60):
     """Reciprocal Rank Fusion : chaque chunk gagne 1 / (rrf_k + rang) dans chaque liste.
 
     On fusionne les rangs plutôt que les scores, qui ne sont pas comparables
     entre les deux méthodes.
     """
     scores, chunks = {}, {}
-    for results in (vector_search(conn, question, pool), keyword_search(conn, question, pool)):
+    for results in (vector_search(query, pool), keyword_search(query, pool)):
         for rank, chunk in enumerate(results, start=1):
-            scores[chunk["id"]] = scores.get(chunk["id"], 0) + 1 / (rrf_k + rank)
-            chunks[chunk["id"]] = chunk
+            scores[chunk["chunk_id"]] = scores.get(chunk["chunk_id"], 0) + 1 / (rrf_k + rank)
+            chunks[chunk["chunk_id"]] = chunk
     best = sorted(scores, key=scores.get, reverse=True)[:k]
-    return [{**chunks[i], "score": scores[i]} for i in best]
+    return [{**chunks[i], "score": round(scores[i], 4)} for i in best]
 
 
-def search(conn, question, mode="hybrid", k=config.TOP_K):
+def retrieve(query, k=config.TOP_K, mode="hybrid"):
+    """Les k chunks les plus pertinents pour la question, du plus au moins pertinent.
+
+    Chaque résultat contient : score, chunk_id, document_id, title, source, page, sections, text.
+    """
     if mode == "vector":
-        return vector_search(conn, question, k)
+        return vector_search(query, k)
     if mode == "keyword":
-        return keyword_search(conn, question, k)
-    return hybrid_search(conn, question, k)
+        return keyword_search(query, k)
+    return hybrid_search(query, k)
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("question", nargs="+")
+    ap.add_argument("--mode", choices=MODES, default="hybrid")
+    ap.add_argument("--k", type=int, default=config.TOP_K)
+    args = ap.parse_args()
+
+    for rank, c in enumerate(retrieve(" ".join(args.question), args.k, args.mode), start=1):
+        sections = f" – {', '.join(c['sections'])}" if c["sections"] else ""
+        print(f"{rank}. [{c['chunk_id']}] score {c['score']:.4f}  {c['title']}{sections}")
+        print(f"   {c['text'][:300].replace(chr(10), ' ')}...\n")
