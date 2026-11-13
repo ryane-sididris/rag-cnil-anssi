@@ -1,0 +1,451 @@
+[
+ {
+  "id": 1,
+  "type": "directe",
+  "question": "Quelle longueur minimale de mot de passe la CNIL recommande-t-elle par défaut ?",
+  "reponse": "- La CNIL recommande un entropie minimale de 80 bits pour un mot de passe par défaut [2] [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 30.1,
+  "passages": [
+   "cnil_securite.pdf p.15",
+   "cnil_securite.pdf p.13",
+   "cnil_securite.pdf p.14",
+   "cnil_securite.pdf p.14"
+  ],
+  "rang_hybride": 2,
+  "faits": "0/2"
+ },
+ {
+  "id": 2,
+  "type": "reformulee",
+  "question": "Combien de caractères faut-il pour un mot de passe sans caractère spécial ?",
+  "reponse": "- Pour un mot de passe sans caractère spécial, l'entropie minimale requise est de 80 bits [1] [3]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 28.8,
+  "passages": [
+   "cnil_securite.pdf p.13",
+   "cnil_securite.pdf p.14",
+   "cnil_securite.pdf p.13",
+   "anssi_hygiene.pdf p.19"
+  ],
+  "rang_hybride": 1,
+  "faits": "0/1"
+ },
+ {
+  "id": 3,
+  "type": "directe",
+  "question": "Pendant combien de temps faut-il conserver les journaux d'événements ?",
+  "reponse": "- Les journaux doivent être conservés pendant au moins un an [1] et plus en fonction des obligations légales du secteur d’activité [1]\n- Les traces applicatives doivent être conservées pendant une période glissante comprise entre six mois et un an [2]\n- Les journaux doivent être conservés pendant une longue durée pour empêcher un attaquant d’effacer d’éventuelles traces de son passage sur les équipements qu’il a compromis [1]\n- Les journaux doivent être conservés sur une longue durée pour permettre la recherche automatisée d’événements suspects, l’archivage des journaux et l’empêcher de supprimer les traces [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 40.3,
+  "passages": [
+   "anssi_hygiene.pdf p.51",
+   "cnil_securite.pdf p.40",
+   "cnil_securite.pdf p.41",
+   "anssi_hygiene.pdf p.53"
+  ],
+  "rang_hybride": 2,
+  "faits": "2/2"
+ },
+ {
+  "id": 4,
+  "type": "reformulee",
+  "question": "Combien de temps garder les logs ?",
+  "reponse": "- Les logs doivent être conservés sur une période glissante comprise entre six mois et un an [4]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 35.4,
+  "passages": [
+   "anssi_hygiene.pdf p.51",
+   "cnil_securite.pdf p.42",
+   "cnil_securite.pdf p.43",
+   "cnil_securite.pdf p.40"
+  ],
+  "rang_hybride": 4,
+  "faits": "2/2"
+ },
+ {
+  "id": 5,
+  "type": "directe",
+  "question": "Dans quel délai faut-il notifier une violation de données personnelles à la CNIL ?",
+  "reponse": "- Il faut notifier une violation de données personnelles à la CNIL dans les 72 heures tel que prévu par le RGPD [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 32.4,
+  "passages": [
+   "cnil_securite.pdf p.44",
+   "cnil_securite.pdf p.43",
+   "cnil_securite.pdf p.44",
+   "cnil_securite.pdf p.58"
+  ],
+  "rang_hybride": 3,
+  "faits": "1/1"
+ },
+ {
+  "id": 6,
+  "type": "directe",
+  "question": "Quel chiffrement utiliser pour les réseaux Wi-Fi ?",
+  "reponse": "- Pour les réseaux Wi-Fi, le chiffrement WPA2 est recommandé [1]\n- Pour une sécurité plus forte, l'utilisation d'un algorithme AES CCMP est recommandée [1]\n- Une authentification centralisée est préférable si possible [1]\n- Le renouvellement du mot de passe unique partagé doit être prévu [1]\n- Le chiffrement WPA2 avec un algorithme AES CCMP est recommandé pour les réseaux Wi-Fi [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 36.7,
+  "passages": [
+   "anssi_hygiene.pdf p.30",
+   "cnil_securite.pdf p.22",
+   "anssi_hygiene.pdf p.29",
+   "anssi_hygiene.pdf p.44"
+  ],
+  "rang_hybride": null,
+  "faits": "1/1"
+ },
+ {
+  "id": 7,
+  "type": "reformulee",
+  "question": "Comment sécuriser la wifi de l'entreprise ?",
+  "reponse": "- Les réseaux Wi-Fi doivent être filtrés et restreints aux seuls flux nécessaires [3]\n- Les points d'accès Wi-Fi doivent être administrés de manière sécurisée [3]\n- Le mot de passe Wi-Fi doit être complexe et renouvelé régulièrement [3]\n- Le réseau Wi-Fi doit être séparé des connexions Wi-Fi des terminaux de l'entité [3]\n- Les protocoles réseaux sécurisés doivent être utilisés dès que possible [4]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 35.4,
+  "passages": [
+   "anssi_hygiene.pdf p.66",
+   "anssi_hygiene.pdf p.8",
+   "anssi_hygiene.pdf p.30",
+   "anssi_hygiene.pdf p.7"
+  ],
+  "rang_hybride": null,
+  "faits": "0/1"
+ },
+ {
+  "id": 8,
+  "type": "directe",
+  "question": "Que recommande la CNIL concernant les sauvegardes ?",
+  "reponse": "- La CNIL recommande de disposer de 3 copies des données, stockées sur 2 supports différents, dont 1 hors ligne [2][3]\n- Les sauvegardes doivent être réalisées fréquemment, en forme papier ou électronique [2]\n- Les sauvegardes doivent être isolées et protégées au même niveau de sécurité que les données [2][4]\n- Les sauvegardes doivent être testées régulièrement pour garantir leur intégrité et leur capacité à être restaurées [2][4]\n- Les sauvegardes ne doivent pas être conservées sur les mêmes systèmes que les données, pour éviter une perte totale en cas de sinistre [2][4]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 36.8,
+  "passages": [
+   "cnil_securite.pdf p.41",
+   "cnil_securite.pdf p.42",
+   "anssi_hygiene.pdf p.53",
+   "cnil_securite.pdf p.42"
+  ],
+  "rang_hybride": 1,
+  "faits": "2/2"
+ },
+ {
+  "id": 9,
+  "type": "directe",
+  "question": "Que faut-il prévoir quand un poste de travail n'est pas utilisé pendant un moment ?",
+  "reponse": "- Un mécanisme de verrouillage automatique de session doit être prévu en cas de non-utilisation du poste pendant un temps donné [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 26.6,
+  "passages": [
+   "cnil_securite.pdf p.18",
+   "anssi_hygiene.pdf p.23",
+   "anssi_hygiene.pdf p.25",
+   "anssi_hygiene.pdf p.39"
+  ],
+  "rang_hybride": 1,
+  "faits": "1/1"
+ },
+ {
+  "id": 10,
+  "type": "directe",
+  "question": "En combien de mesures le guide d'hygiène informatique de l'ANSSI est-il organisé ?",
+  "reponse": "- Le guide d'hygiène informatique de l'ANSSI est organisé en 42 mesures [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 33.7,
+  "passages": [
+   "anssi_hygiene.pdf p.1",
+   "anssi_hygiene.pdf p.66",
+   "anssi_ia_generative.pdf p.34",
+   "cnil_securite.pdf p.9"
+  ],
+  "rang_hybride": 1,
+  "faits": "1/1"
+ },
+ {
+  "id": 11,
+  "type": "directe",
+  "question": "Que faire d'une clé USB trouvée dans un lieu public ?",
+  "reponse": "- Il convient notamment de proscrire le branchement de clés USB inconnues (ramassées dans un lieu public par exemple) et de limiter au maximum celui de clés non maîtrisées (dont on connait la provenance mais pas l’intégrité) sur le système d’information [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 31.4,
+  "passages": [
+   "anssi_hygiene.pdf p.24",
+   "cnil_securite.pdf p.48",
+   "cnil_securite.pdf p.19",
+   "anssi_hygiene.pdf p.23"
+  ],
+  "rang_hybride": 1,
+  "faits": "1/1"
+ },
+ {
+  "id": 12,
+  "type": "reformulee",
+  "question": "Peut-on brancher n'importe quel support amovible sur son ordinateur ?",
+  "reponse": "- Il est recommandé de proscrire le branchement de clés USB inconnues [1] afin de limiter les risques de propagation de virus ou de vol d'informations sensibles.",
+  "refus": false,
+  "cite": true,
+  "duree_s": 30.8,
+  "passages": [
+   "anssi_hygiene.pdf p.24",
+   "cnil_securite.pdf p.18",
+   "anssi_hygiene.pdf p.43",
+   "cnil_securite.pdf p.48"
+  ],
+  "rang_hybride": 1,
+  "faits": "1/1"
+ },
+ {
+  "id": 13,
+  "type": "directe",
+  "question": "Pourquoi les comptes d'accès doivent-ils être nominatifs selon l'ANSSI ?",
+  "reponse": "- Les comptes d'accès doivent être nominatifs pour faciliter l'attribution d'une action sur le système d'information en cas d'incident ou l'identification d'éventuels comptes compromis [1]\n- Les comptes génériques doivent être utilisés de manière marginale et rattachés à un nombre limité de personnes physiques [1]\n- Les comptes génériques (comme admin, user) ne doivent pas être utilisés pour des comptes de service ou d'administration [1]\n- Les comptes d'administration doivent être dédiés exclusivement aux actions d'administration et utiliser des identifiants distincts [1]\n- Les comptes d'administration doivent être utilisés sur des environnements dédiés pour ne pas laisser de traces de connexion ni de condensat de mot de passe sur un environnement plus exposé [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 42.1,
+  "passages": [
+   "anssi_hygiene.pdf p.16",
+   "anssi_hygiene.pdf p.14",
+   "anssi_hygiene.pdf p.66",
+   "anssi_hygiene.pdf p.12"
+  ],
+  "rang_hybride": 1,
+  "faits": "1/1"
+ },
+ {
+  "id": 14,
+  "type": "directe",
+  "question": "Quels éléments une politique de sauvegarde doit-elle contenir selon l'ANSSI ?",
+  "reponse": "- La liste des données jugées vitales pour l’organisme et les serveurs concernés [1]\n- Les différents types de sauvegarde (par exemple le mode hors ligne) [1]\n- La fréquence des sauvegardes [1]\n- La procédure d’administration et d’exécution des sauvegardes [1]\n- Les informations de stockage et les restrictions d’accès aux sauvegardes [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 41.5,
+  "passages": [
+   "anssi_hygiene.pdf p.53",
+   "anssi_hygiene.pdf p.66",
+   "anssi_ia_generative.pdf p.34",
+   "cnil_securite.pdf p.42"
+  ],
+  "rang_hybride": 1,
+  "faits": "2/3"
+ },
+ {
+  "id": 15,
+  "type": "directe",
+  "question": "Pourquoi faut-il définir une politique de mise à jour du système d'information ?",
+  "reponse": "- Il est primordial de s'informer de l'apparition de nouvelles vulnérabilités [1]\n- Ces vulnérabilités constituent autant de portes d'accès pour un attaquant [1]\n- Une politique de mise à jour doit préciser la manière dont l'inventaire des composants du système d'information est réalisé [1]\n- Elle doit également préciser les sources d'information relatives aux mises à jour [1]\n- Elle doit détailler les outils pour déployer les correctifs sur le parc [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 39.0,
+  "passages": [
+   "anssi_hygiene.pdf p.46",
+   "anssi_hygiene.pdf p.66",
+   "anssi_hygiene.pdf p.48",
+   "anssi_hygiene.pdf p.53"
+  ],
+  "rang_hybride": 1,
+  "faits": "1/1"
+ },
+ {
+  "id": 16,
+  "type": "directe",
+  "question": "Que doit représenter la cartographie du réseau ?",
+  "reponse": "- La cartographie du réseau doit représenter les différents équipements et les flux de données entre eux [1] [2] [3]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 27.5,
+  "passages": [
+   "anssi_hygiene.pdf p.29",
+   "anssi_hygiene.pdf p.30",
+   "cnil_securite.pdf p.22",
+   "cnil_securite.pdf p.22"
+  ],
+  "rang_hybride": null,
+  "faits": "1/2"
+ },
+ {
+  "id": 17,
+  "type": "directe",
+  "question": "Quelles sont les phases du cycle de vie d'un système d'IA générative ?",
+  "reponse": "- Le cycle de vie d'un système d'IA générative comprend trois phases : entraînement, déploiement et production [1] [2][3]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 29.1,
+  "passages": [
+   "anssi_ia_generative.pdf p.9",
+   "anssi_ia_generative.pdf p.10",
+   "anssi_ia_generative.pdf p.32",
+   "anssi_ia_generative.pdf p.24"
+  ],
+  "rang_hybride": 1,
+  "faits": "3/3"
+ },
+ {
+  "id": 18,
+  "type": "reformulee",
+  "question": "C'est quoi l'empoisonnement de données pour une IA ?",
+  "reponse": "- L'empoisonnement de données pour une IA est une technique d'attaque consistant à altérer les données d'entraînement utilisées pour former un modèle d'IA, ce qui peut conduire à une déviation du comportement attendu du modèle une fois qu'il est en production. [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 28.4,
+  "passages": [
+   "anssi_ia_generative.pdf p.13",
+   "anssi_ia_generative.pdf p.14",
+   "anssi_ia_generative.pdf p.23",
+   "anssi_ia_generative.pdf p.18"
+  ],
+  "rang_hybride": 1,
+  "faits": "1/1"
+ },
+ {
+  "id": 19,
+  "type": "directe",
+  "question": "Quand faut-il mener l'analyse de risque d'un système d'IA selon l'ANSSI ?",
+  "reponse": "- Une analyse de risque sur les systèmes d’IA doit être menée avant la phase d’entraînement [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 33.7,
+  "passages": [
+   "anssi_ia_generative.pdf p.32",
+   "anssi_ia_generative.pdf p.24",
+   "anssi_ia_generative.pdf p.32",
+   "anssi_ia_generative.pdf p.34"
+  ],
+  "rang_hybride": 1,
+  "faits": "2/2"
+ },
+ {
+  "id": 20,
+  "type": "directe",
+  "question": "Quels cas d'usage couvre le guide de l'ANSSI sur l'IA générative ?",
+  "reponse": "- Des cas d'usage couvrent l'entier du cycle de vie d'un système d'IA générative, de son déploiement à sa production [1]",
+  "refus": false,
+  "cite": true,
+  "duree_s": 31.4,
+  "passages": [
+   "anssi_ia_generative.pdf p.36",
+   "anssi_ia_generative.pdf p.24",
+   "anssi_ia_generative.pdf p.34",
+   "anssi_ia_generative.pdf p.10"
+  ],
+  "rang_hybride": null,
+  "faits": "0/3"
+ },
+ {
+  "id": 21,
+  "type": "reformulee",
+  "question": "Faut-il activer la MFA pour accéder à distance à la messagerie ?",
+  "reponse": "Je ne trouve pas cette information dans les documents.",
+  "refus": true,
+  "cite": false,
+  "duree_s": 20.5,
+  "passages": [
+   "cnil_securite.pdf p.18",
+   "anssi_hygiene.pdf p.34",
+   "anssi_hygiene.pdf p.25",
+   "cnil_securite.pdf p.18"
+  ],
+  "rang_hybride": null,
+  "faits": "0/1"
+ },
+ {
+  "id": 22,
+  "type": "reformulee",
+  "question": "Faut-il nommer un RSSI et un DPO ?",
+  "reponse": "- Un RSSI et un DPO doivent être nommés selon [1] pour assurer la sécurité et la protection des données.",
+  "refus": false,
+  "cite": true,
+  "duree_s": 21.3,
+  "passages": [
+   "cnil_securite.pdf p.7",
+   "anssi_hygiene.pdf p.55",
+   "anssi_hygiene.pdf p.7",
+   "cnil_securite.pdf p.22"
+  ],
+  "rang_hybride": 1,
+  "faits": "2/2"
+ },
+ {
+  "id": 23,
+  "type": "hors_corpus",
+  "question": "Quelle est la capitale de l'Inde ?",
+  "reponse": "Je ne trouve pas cette information dans les documents.",
+  "refus": true,
+  "cite": false,
+  "duree_s": 24.9,
+  "passages": [
+   "anssi_hygiene.pdf p.11",
+   "anssi_hygiene.pdf p.51",
+   "cnil_securite.pdf p.55",
+   "anssi_ia_generative.pdf p.20"
+  ]
+ },
+ {
+  "id": 24,
+  "type": "hors_corpus",
+  "question": "Comment faire cuire des pâtes ?",
+  "reponse": "Je ne trouve pas cette information dans les documents.",
+  "refus": true,
+  "cite": false,
+  "duree_s": 22.2,
+  "passages": [
+   "cnil_securite.pdf p.33",
+   "anssi_hygiene.pdf p.29",
+   "cnil_securite.pdf p.59",
+   "anssi_hygiene.pdf p.20"
+  ]
+ },
+ {
+  "id": 25,
+  "type": "hors_corpus",
+  "question": "Quel est le meilleur antivirus gratuit ?",
+  "reponse": "Je ne trouve pas cette information dans les documents.",
+  "refus": true,
+  "cite": false,
+  "duree_s": 23.0,
+  "passages": [
+   "cnil_securite.pdf p.61",
+   "anssi_hygiene.pdf p.34",
+   "anssi_hygiene.pdf p.32",
+   "anssi_hygiene.pdf p.29"
+  ]
+ },
+ {
+  "id": 26,
+  "type": "hors_corpus",
+  "question": "Quel est le salaire moyen d'un RSSI en France ?",
+  "reponse": "Je ne trouve pas cette information dans les documents.",
+  "refus": true,
+  "cite": false,
+  "duree_s": 21.0,
+  "passages": [
+   "anssi_hygiene.pdf p.7",
+   "cnil_securite.pdf p.7",
+   "cnil_securite.pdf p.15",
+   "cnil_securite.pdf p.9"
+  ]
+ },
+ {
+  "id": 27,
+  "type": "hors_corpus",
+  "question": "Combien coûte une licence Microsoft 365 ?",
+  "reponse": "Je ne trouve pas cette information dans les documents.",
+  "refus": true,
+  "cite": false,
+  "duree_s": 32.7,
+  "passages": [
+   "anssi_hygiene.pdf p.69",
+   "anssi_ia_generative.pdf p.32",
+   "anssi_ia_generative.pdf p.36",
+   "anssi_ia_generative.pdf p.34"
+  ]
+ }
+]
