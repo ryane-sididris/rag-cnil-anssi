@@ -1,0 +1,29 @@
+﻿id;categorie;question;hybrid;vector;keyword
+Q01;directe;Quelle longueur minimale de mot de passe la CNIL recommande-t-elle par défaut ?;1;1;2
+Q02;reformulee;Combien de caractères faut-il pour un mot de passe sans caractère spécial ?;1;1;2
+Q03;directe;Pendant combien de temps faut-il conserver les journaux d'événements ?;3;;2
+Q04;reformulee;Combien de temps garder les logs ?;1;4;3
+Q05;directe;Dans quel délai faut-il notifier une violation de données personnelles à la CNIL ?;2;2;3
+Q06;directe;Quel chiffrement utiliser pour les réseaux Wi-Fi ?;1;1;1
+Q07;reformulee;Comment sécuriser la wifi de l'entreprise ?;1;1;
+Q08;directe;Que recommande la CNIL concernant les sauvegardes ?;1;3;1
+Q09;directe;Que faut-il prévoir quand un poste de travail n'est pas utilisé pendant un moment ?;1;1;1
+Q10;directe;En combien de mesures le guide d'hygiène informatique de l'ANSSI est-il organisé ?;2;2;2
+Q11;directe;Que faire d'une clé USB trouvée dans un lieu public ?;1;1;2
+Q12;reformulee;Peut-on brancher n'importe quel support amovible sur son ordinateur ?;1;1;1
+Q13;directe;Pourquoi les comptes d'accès doivent-ils être nominatifs selon l'ANSSI ?;1;1;1
+Q14;directe;Quels éléments une politique de sauvegarde doit-elle contenir selon l'ANSSI ?;1;1;2
+Q15;directe;Pourquoi faut-il définir une politique de mise à jour du système d'information ?;1;1;1
+Q16;directe;Que doit représenter la cartographie du réseau ?;3;1;
+Q17;directe;Quelles sont les phases du cycle de vie d'un système d'IA générative ?;1;1;1
+Q18;reformulee;C'est quoi l'empoisonnement de données pour une IA ?;1;3;1
+Q19;directe;Quand faut-il mener l'analyse de risque d'un système d'IA selon l'ANSSI ?;;1;
+Q20;directe;Quels cas d'usage couvre le guide de l'ANSSI sur l'IA générative ?;;1;
+Q21;reformulee;Faut-il activer la MFA pour accéder à distance à la messagerie ?;;3;
+Q22;reformulee;Faut-il nommer un RSSI et un DPO ?;1;1;3
+Q28;difficile;Combien de temps faut-il conserver les données ?;;;
+Q29;difficile;Faut-il changer régulièrement son mot de passe ?;1;1;1
+Q30;difficile;Est-ce que je peux coller un contrat client dans ChatGPT pour le résumer ?;1;1;1
+Q31;difficile;Que disent la CNIL et l'ANSSI sur la journalisation ?;1;1;1
+Q32;difficile;Pourquoi la CNIL interdit-elle le cloud ?;1;1;1
+Q33;difficile;Quelle est la différence entre une mesure standard et une mesure renforcée ?;4;;2

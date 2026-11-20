@@ -30,7 +30,7 @@ if submitted and question.strip():
     st.markdown(r["reponse"])
     st.caption(f"{elapsed:.0f} s")
     if r["citations_invalides"]:
-        st.warning(f"Identifiants cités mais absents des extraits : {', '.join(r['citations_invalides'])}")
+        st.warning(f"Citations invalides : {', '.join(r['citations_invalides'])}")
 
     st.subheader("Extraits récupérés")
     for c in r["chunks"]:

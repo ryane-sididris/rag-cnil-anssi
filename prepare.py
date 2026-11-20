@@ -1,18 +1,8 @@
-"""Préparation du corpus : PDF bruts (data/) -> corpus/documents.json
+"""Préparation du corpus : PDF de data/ -> corpus/documents.json
 
-python prepare.py
-
-Chaque guide est découpé selon sa propre structure :
-  - CNIL, sécurité des données personnelles : 1 document par fiche ;
-  - ANSSI, hygiène informatique : avant-propos et mode d'emploi, puis 1 document par chapitre
-    (les 42 mesures y sont des sections) ;
-  - ANSSI, IA générative : 1 document par partie du sommaire (les recommandations R1-R35
-    y sont des sections).
-
-Le texte est lu ligne par ligne avec sa taille de police, ce qui permet de reconnaître les
-titres et de retirer en-têtes, pieds de page, numéros de page et notes de bas de page.
-Les sous-titres sont conservés dans "sections", pour que le découpage en chunks
-(chunk.py) puisse suivre la structure des documents.
+CNIL : un document par fiche.
+ANSSI hygiène : avant-propos et mode d'emploi, puis un document par chapitre.
+ANSSI IA : un document par partie du sommaire.
 """
 import json
 import re
@@ -43,18 +33,11 @@ SOURCES = {
 }
 
 ACRONYMES = {"api": "API", "ia": "IA", "rgpd": "RGPD", "wi-fi": "Wi-Fi"}
-CORRECTIONS = {"articificielle": "artificielle"}  # coquille présente dans le PDF de la CNIL
+CORRECTIONS = {"articificielle": "artificielle"}  # coquille dans le PDF de la CNIL
 ETIQUETTE = re.compile(r"(Mesure \d+|R\d+)")
 
 
-# ---------------------------------------------------------------- lecture du PDF
-
 def _texte_ligne(spans):
-    """Texte d'une ligne, reconstruit caractère par caractère, et sa taille de police principale.
-
-    Certains PDF justifiés n'encodent pas les espaces (« Cedocumentrédigéparl'ANSSI ») :
-    on remet un espace quand l'écart entre deux caractères est anormalement grand.
-    """
     tailles = Counter()
     for s in spans:
         tailles[round(s["size"], 1)] += len(s["chars"])
@@ -64,13 +47,15 @@ def _texte_ligne(spans):
     for i, s in enumerate(spans):
         texte = "".join(c["c"] for c in s["chars"]).strip()
         petit = s["size"] < 0.85 * principale
-        if petit and re.fullmatch(r"\d+", texte):  # appel de note en exposant
+        if petit and re.fullmatch(r"\d+", texte):  # appel de note
             continue
-        if i == 0 and petit and texte == "I":  # puce du guide IA (glyphe « I »)
+        if i == 0 and petit and texte == "I":  # puce du guide IA
             sortie.append("- ")
             fin_prec = None
             continue
         for c in s["chars"]:
+            # le PDF IA n'encode pas toujours les espaces : on en remet un
+            # quand deux caractères sont trop écartés
             if (fin_prec is not None and c["c"] != " " and sortie and sortie[-1] != " "
                     and c["bbox"][0] - fin_prec > 0.12 * s["size"]):
                 sortie.append(" ")
@@ -81,7 +66,6 @@ def _texte_ligne(spans):
 
 
 def lignes(pdf_path):
-    """Liste de lignes {page, taille, gras, y, texte}, triées de haut en bas sur chaque page."""
     resultat = []
     with pymupdf.open(pdf_path) as doc:
         for num, page in enumerate(doc, start=1):
@@ -102,21 +86,19 @@ def lignes(pdf_path):
     return resultat
 
 
-# ------------------------------------------------- reconnaissance des éléments par guide
-# Chaque fonction associe une ligne à un type :
-#   "ignorer", "document" (titre de document), "sous-document" (partie de niveau 2),
-#   "section" (sous-titre), "niveau" (mention standard / renforcé) ou "texte".
+# Type de chaque ligne selon sa page et sa taille de police :
+# ignorer, document, sous-document, section, niveau ou texte.
 
 def classer_cnil(l):
     t, taille = l["texte"], l["taille"]
-    if not 5 <= l["page"] <= 60:  # avant : couverture, sommaire, avant-propos ; après : check-list
+    if not 5 <= l["page"] <= 60:  # couverture, sommaire, avant-propos, check-list
         return "ignorer"
     if taille >= 13 and l["gras"]:
         return "document"
     if taille == 13.0 or (taille == 6.6 and t.isupper()):
         return "section"
     if taille in (6.0, 7.0, 30.0) or (taille == 10.0 and l["y"] > 550):
-        return "ignorer"  # notes, tableaux, intercalaires de partie, numéros de page
+        return "ignorer"  # notes, tableaux, intercalaires, numéros de page
     return "texte"
 
 
@@ -124,7 +106,7 @@ def classer_hygiene(l):
     t, taille = l["texte"], l["taille"]
     if not 3 <= l["page"] <= 60 or l["page"] == 4:  # sommaire, outil de suivi, bibliographie
         return "ignorer"
-    if t in ("AVANT-PROPOS", "MODE D’EMPLOI DU GUIDE"):  # réunis dans un document d'introduction
+    if t in ("AVANT-PROPOS", "MODE D’EMPLOI DU GUIDE"):
         return "document" if l["page"] == 3 else "section"
     if taille == 22.5:
         return "document"
@@ -139,14 +121,14 @@ def classer_hygiene(l):
 
 def classer_ia(l):
     t, taille = l["texte"], l["taille"]
-    if not 5 <= l["page"] <= 31:  # avant : couverture, sommaire ; après : liste des R, bibliographie
+    if not 5 <= l["page"] <= 31:  # couverture, sommaire, liste des R, bibliographie
         return "ignorer"
     if taille in (33.9, 27.9):
         if re.fullmatch(r"\d+(\.\d+)*", t):
-            return "ignorer"  # numéro de partie
+            return "ignorer"
         return "document" if taille == 33.9 else "sous-document"
     if taille == 17.9 or (taille == 12.0 and re.fullmatch(r"R\d+", t)):
-        return "section"  # titre de recommandation, terme défini, ou étiquette R1-R35
+        return "section"  # recommandation, terme défini ou numéro R1-R35
     if taille in (8.0, 9.0, 43.8) or l["y"] > 770:
         return "ignorer"  # notes, pied de page, numéro de chapitre
     return "texte"
@@ -156,11 +138,8 @@ CLASSEURS = {"cnil_securite.pdf": classer_cnil, "anssi_hygiene.pdf": classer_hyg
              "anssi_ia_generative.pdf": classer_ia}
 
 
-# ------------------------------------------------------------- assemblage des documents
-
 def joindre(a, b):
-    """Recolle deux morceaux de texte, en réparant les mots coupés en fin de ligne."""
-    if a.endswith("-") and b[:1].islower():
+    if a.endswith("-") and b[:1].islower():  # mot coupé en fin de ligne
         return a + b if b.startswith(("ci ", "ci,", "là")) else a[:-1] + b
     return f"{a} {b}"
 
@@ -170,7 +149,6 @@ def nb_mots(doc):
 
 
 def assembler(pdf_name):
-    """Construit la liste des documents d'un guide : titre, pages et sections."""
     classer = CLASSEURS[pdf_name]
     docs, doc, section, prec, chapitre = [], None, None, None, None
 
@@ -178,7 +156,7 @@ def assembler(pdf_name):
         genre, t = classer(l), l["texte"]
         if genre == "ignorer":
             continue
-        # ligne suivante d'un titre sur plusieurs lignes ?
+        # titre sur plusieurs lignes
         suite = (prec and prec[0] == genre and prec[1]["page"] == l["page"]
                  and l["y"] - prec[1]["y"] < 1.6 * max(l["taille"], 18))
 
@@ -202,10 +180,9 @@ def assembler(pdf_name):
         elif doc is None:
             continue
         elif genre == "section":
-            if l["taille"] == 50.0 and t.isdigit():  # numéro de mesure du guide d'hygiène
+            if l["taille"] == 50.0 and t.isdigit():
                 t = f"Mesure {t}"
             if suite and section and not section["paragraphes"]:
-                # titre sur plusieurs lignes, ou étiquette (« Mesure 5 », « R3 ») + titre
                 if ETIQUETTE.fullmatch(t):
                     section["titre"] = f"{t} – {section['titre']}"
                 elif ETIQUETTE.fullmatch(section["titre"]):
@@ -227,7 +204,7 @@ def assembler(pdf_name):
             elif paras[-1].endswith("-") and t[:1].islower():
                 paras[-1] = joindre(paras[-1], t)
             elif l["page"] != prec[1]["page"]:
-                # changement de page : on continue la phrase si elle n'était pas finie
+                # phrase coupée par un changement de page
                 if paras[-1].endswith((".", "!", "?", ":", "»")):
                     paras.append(t)
                 else:
@@ -250,7 +227,6 @@ def assembler(pdf_name):
 
 
 def titre_propre(texte):
-    """« FICHE 4 - AUTHENTIFIER LES UTILISATEURS » -> « Authentifier les utilisateurs »."""
     texte = re.sub(r"^FICHE\s*\d+\s*[-–]\s*", "", " ".join(texte.split()), flags=re.I)
     if sum(c.isupper() for c in texte) > sum(c.islower() for c in texte):  # titre en capitales
         texte = " ".join(ACRONYMES.get(m, CORRECTIONS.get(m, m)) for m in texte.lower().split())
@@ -269,8 +245,7 @@ def mots(texte):
 def main():
     documents = []
     for pdf_name, info in SOURCES.items():
-        # le guide d'hygiène commence par un document d'introduction (HYG_00), puis les chapitres I à X
-        debut = 0 if info["prefixe"] == "HYG" else 1
+        debut = 0 if info["prefixe"] == "HYG" else 1  # HYG_00 : avant-propos et mode d'emploi
         for i, d in enumerate(assembler(pdf_name), start=debut):
             titre = titre_propre(d["titre"])
             if info["prefixe"] == "CNIL":
@@ -291,12 +266,12 @@ def main():
                              for s in d["sections"]],
             })
 
-    # contrôle des quasi-doublons (similarité de Jaccard sur le vocabulaire)
+    # quasi-doublons
     for i, a in enumerate(documents):
         for b in documents[i + 1:]:
             ma, mb = mots(a["text"]), mots(b["text"])
             if len(ma & mb) / len(ma | mb) > 0.6:
-                print(f"Attention, documents très proches : {a['document_id']} et {b['document_id']}")
+                print(f"Documents proches : {a['document_id']} et {b['document_id']}")
 
     Path(config.CORPUS_DIR).mkdir(exist_ok=True)
     with open(config.DOCUMENTS_FILE, "w", encoding="utf-8") as f:
@@ -306,7 +281,7 @@ def main():
     for d, n in zip(documents, tailles):
         print(f"{d['document_id']:<8} {n:>5} mots {len(d['sections']):>3} sections  {d['title'][:70]}")
     print(f"\n{len(documents)} documents, de {min(tailles)} à {max(tailles)} mots "
-          f"(moyenne {sum(tailles) / len(tailles):.0f}) -> {config.DOCUMENTS_FILE}")
+          f"(moyenne {sum(tailles) / len(tailles):.0f})")
 
 
 if __name__ == "__main__":

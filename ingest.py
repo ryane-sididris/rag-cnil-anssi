@@ -1,9 +1,6 @@
-"""Indexation de corpus/chunks.json dans PostgreSQL : vecteurs (pgvector) et plein texte.
+"""Indexation de corpus/chunks.json dans PostgreSQL (pgvector + plein texte).
 
-python ingest.py
-
-La table est recréée à chaque exécution : l'index correspond toujours exactement
-au fichier de chunks.
+La table est recréée à chaque exécution.
 """
 import json
 import time
@@ -26,7 +23,7 @@ CREATE TABLE chunks (
     sections    TEXT[] NOT NULL,
     text        TEXT   NOT NULL,
     embedding   vector({config.EMBED_DIM}) NOT NULL,
-    -- index plein texte (analyse en français) : titre du document (poids A) + texte (poids B)
+    -- titre du document (poids A) + texte (poids B)
     tsv tsvector GENERATED ALWAYS AS (
         setweight(to_tsvector('french', title), 'A') || setweight(to_tsvector('french', text), 'B')
     ) STORED
@@ -37,7 +34,6 @@ CREATE INDEX ON chunks USING gin (tsv);
 
 
 def texte_a_vectoriser(chunk):
-    """Le titre du document est ajouté au texte : il aide quand le chunk ne le répète pas."""
     return f"{chunk['title']}\n{chunk['text']}"
 
 

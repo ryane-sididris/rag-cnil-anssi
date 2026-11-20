@@ -1,21 +1,13 @@
-"""Évaluation du RAG sur evaluation/questions.json.
+"""Évaluation sur evaluation/questions.json.
 
-python evaluate.py --recherche   # recherche seule, les 3 modes comparés (1 à 2 min)
-python evaluate.py               # recherche + génération en mode hybride (20 à 40 min)
-python evaluate.py --bilan       # synthèse, après avoir rempli à la main les colonnes de jugement
+python evaluate.py --recherche   # recherche seule, 3 modes
+python evaluate.py               # recherche + réponses (mode hybride)
+python evaluate.py --bilan       # synthèse des colonnes remplies à la main dans resultats.csv
 
-Fichiers produits dans evaluation/ :
-  recherche.csv   rang du premier bon chunk pour chaque question et chaque mode de recherche
-  resultats.json  pour chaque question : extraits récupérés (texte complet), réponse, citations
-  resultats.csv   tableau à relire et à compléter à la main (ouvrable dans Excel) :
-                    correct    oui / partiel / non   (la réponse est-elle juste et complète ?)
-                    ancree     oui / non             (chaque affirmation est-elle dans les extraits cités ?)
-                    echec      aucun / recherche / generation / ancrage / refus
-                    commentaire
-
-Le « bon chunk » d'une question est un chunk d'un des documents attendus qui contient
-toutes les expressions de "preuve". Les colonnes calculées automatiquement (faits trouvés,
-refus, citations) aident à juger mais ne remplacent pas la relecture.
+Colonnes à remplir dans resultats.csv :
+  correct : oui / partiel / non
+  ancree  : oui / non
+  echec   : aucun / recherche / generation / ancrage / refus
 """
 import argparse
 import csv
@@ -38,7 +30,7 @@ CATEGORIES = ("directe", "reformulee", "difficile", "hors_corpus")
 
 
 def rang_bon_chunk(q, chunks):
-    """Rang (1, 2, ...) du premier chunk qui contient la preuve attendue, sinon None."""
+    # bon chunk : chunk d'un document attendu qui contient toute la preuve
     for rang, c in enumerate(chunks, start=1):
         if c["document_id"] in q["documents_attendus"] and \
                 all(normaliser(p) in normaliser(c["text"]) for p in q.get("preuve", [])):
@@ -47,7 +39,6 @@ def rang_bon_chunk(q, chunks):
 
 
 def faits_trouves(q, reponse):
-    """« 1/2 » : nombre de faits attendus présents dans la réponse (indication automatique)."""
     if not q.get("faits"):
         return ""
     r = normaliser(reponse)
@@ -70,8 +61,6 @@ def lire_csv(chemin):
         return list(csv.DictReader(f, delimiter=";"))
 
 
-# ----------------------------------------------------------------------- recherche seule
-
 def evaluer_recherche(questions):
     avec_reponse = [q for q in questions if q["documents_attendus"]]
     lignes = []
@@ -80,33 +69,30 @@ def evaluer_recherche(questions):
         lignes.append({"id": q["id"], "categorie": q["categorie"], "question": q["question"],
                        **{m: rangs[m] or "" for m in MODES}})
 
-    print(f"RECHERCHE : le bon chunk est-il dans les {config.TOP_K} extraits récupérés ?\n")
+    print(f"Bon chunk dans les {config.TOP_K} premiers :\n")
     print(f"  {'':<12}" + "".join(f"{m:<22}" for m in MODES))
     for cat in ("directe", "reformulee", "difficile", None):
         groupe = [l for l in lignes if cat is None or l["categorie"] == cat]
-        print(f"  {cat or 'TOTAL':<12}" + "".join(
+        print(f"  {cat or 'total':<12}" + "".join(
             f"{pct(sum(bool(l[m]) for l in groupe), len(groupe)):<22}" for m in MODES))
     print(f"  {'MRR':<12}" + "".join(
         f"{sum(1 / l[m] for l in lignes if l[m]) / len(lignes):<22.2f}" for m in MODES))
 
     differences = [l for l in lignes if len({bool(l[m]) for m in MODES}) > 1]
     if differences:
-        print("\n  Questions où les modes ne sont pas d'accord (rang du bon chunk, - = absent) :")
+        print("\n  Rang du bon chunk quand les modes diffèrent (- = absent) :")
         for l in differences:
             print(f"    {l['id']} " + "  ".join(f"{m}: {l[m] or '-'}" for m in MODES) + f"  {l['question']}")
 
     ecrire_csv(RECHERCHE_CSV, lignes)
-    print(f"\nDétail : {RECHERCHE_CSV}")
 
-
-# ------------------------------------------------------------- recherche + génération
 
 def evaluer_reponses(questions):
     if RESULTATS_CSV.exists() and any(l.get("correct") for l in lire_csv(RESULTATS_CSV)):
-        raise SystemExit(f"{RESULTATS_CSV} contient déjà des jugements : renomme-le avant de relancer.")
+        raise SystemExit(f"{RESULTATS_CSV} contient déjà des jugements, renomme-le avant de relancer.")
 
     complet, lignes = [], []
-    print(f"RÉPONSES (recherche hybride, k = {config.TOP_K}, modèle {config.LLM_MODEL})\n")
+    print(f"Mode hybride, k = {config.TOP_K}, {config.LLM_MODEL}\n")
     for q in questions:
         debut = time.time()
         r = answer(q["question"])
@@ -133,25 +119,19 @@ def evaluer_reponses(questions):
     attendus = [l for l in lignes if l["attendu"] == "reponse"]
     hors = [l for l in lignes if l["categorie"] == "hors_corpus"]
     repondues = [l for l in lignes if l["refus"] == "non" and l["categorie"] != "hors_corpus"]
-    print("\n  Indicateurs automatiques (à confirmer en relisant) :")
-    print(f"    bon chunk récupéré (questions avec réponse) : "
-          f"{pct(sum(bool(l['rang_bon_chunk']) for l in attendus), len(attendus))}")
-    print(f"    hors corpus correctement refusées          : {pct(sum(l['refus'] == 'oui' for l in hors), len(hors))}")
-    print(f"    refus alors qu'une réponse était attendue  : {pct(sum(l['refus'] == 'oui' for l in attendus), len(attendus))}")
-    print(f"    réponses avec au moins une source valide   : "
-          f"{pct(sum(bool(l['sources_citees']) for l in repondues), len(repondues))}")
-    print(f"    réponses avec une citation invalide        : {sum(bool(l['citations_invalides']) for l in lignes)}")
-    print(f"    temps moyen par réponse                    : {sum(l['duree_s'] for l in lignes) / len(lignes):.0f} s")
-    print(f"\nÀ faire : ouvrir {RESULTATS_CSV}, remplir {', '.join(JUGEMENTS)}, puis python evaluate.py --bilan")
+    print(f"\n  bon chunk récupéré           {pct(sum(bool(l['rang_bon_chunk']) for l in attendus), len(attendus))}")
+    print(f"  refus hors corpus            {pct(sum(l['refus'] == 'oui' for l in hors), len(hors))}")
+    print(f"  refus à tort                 {pct(sum(l['refus'] == 'oui' for l in attendus), len(attendus))}")
+    print(f"  réponses avec une source     {pct(sum(bool(l['sources_citees']) for l in repondues), len(repondues))}")
+    print(f"  citations invalides          {sum(bool(l['citations_invalides']) for l in lignes)}")
+    print(f"  temps moyen                  {sum(l['duree_s'] for l in lignes) / len(lignes):.0f} s")
 
-
-# ------------------------------------------------------------- synthèse des jugements
 
 def bilan():
     lignes = lire_csv(RESULTATS_CSV)
     manquants = [l["id"] for l in lignes if not l["correct"] or not l["echec"]]
     if manquants:
-        print(f"Jugements manquants pour : {', '.join(manquants)}\n")
+        print(f"Non jugées : {', '.join(manquants)}\n")
 
     print(f"{'':<12}{'n':>3}  {'correct':<22}{'partiel':<22}{'ancrée':<22}")
     for cat in CATEGORIES:
@@ -163,15 +143,15 @@ def bilan():
     echecs = defaultdict(list)
     for l in lignes:
         echecs[l["echec"] or "?"].append(l["id"])
-    print("\nType d'échec (première étape du pipeline en cause) :")
+    print("\nÉchecs :")
     for typ, n in Counter({k: len(v) for k, v in echecs.items()}).most_common():
         print(f"  {typ:<11} {n:>2}  {', '.join(echecs[typ])}")
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--recherche", action="store_true", help="recherche seule, 3 modes")
-    ap.add_argument("--bilan", action="store_true", help="synthèse des jugements de resultats.csv")
+    ap.add_argument("--recherche", action="store_true")
+    ap.add_argument("--bilan", action="store_true")
     args = ap.parse_args()
 
     if args.bilan:

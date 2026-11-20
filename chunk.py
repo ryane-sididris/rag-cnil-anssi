@@ -1,17 +1,8 @@
 """Découpage des documents en chunks : corpus/documents.json -> corpus/chunks.json
 
-python chunk.py
-
-Stratégie : les chunks suivent la structure des documents (sections d'une fiche CNIL,
-mesures ANSSI, recommandations R1-R35).
-  1. Une section qui tient dans CHUNK_WORDS mots n'est jamais coupée.
-  2. Les petites sections voisines d'un même document sont regroupées jusqu'à CHUNK_WORDS mots
-     (sinon on obtiendrait des chunks de 30 mots, trop pauvres pour répondre).
-  3. Une section plus longue est coupée entre deux paragraphes, avec OVERLAP_WORDS mots de
-     chevauchement ; chaque morceau garde le titre de sa section.
-  4. Un chunk de moins de MIN_CHUNK_WORDS mots (introduction d'une fiche, par exemple)
-     est fusionné avec son voisin.
-Chaque chunk garde les métadonnées de son document (identifiant, titre, source).
+Les chunks suivent les sections des documents (parties des fiches CNIL, mesures,
+recommandations). Les petites sections voisines sont regroupées, les sections trop
+longues sont coupées entre deux paragraphes.
 """
 import json
 
@@ -23,12 +14,7 @@ def nb_mots(texte):
 
 
 def couper_section(titre, texte, max_mots=config.CHUNK_WORDS, chevauchement=config.OVERLAP_WORDS):
-    """Coupe une section trop longue entre deux paragraphes.
-
-    Un paragraphe n'est jamais coupé, sauf s'il dépasse max_mots à lui seul.
-    Chaque morceau commence par le titre de la section et les `chevauchement`
-    derniers mots du morceau précédent.
-    """
+    # un paragraphe n'est coupé que s'il dépasse max_mots à lui seul
     unites = []
     for para in texte.split("\n"):
         m = para.split()
@@ -54,8 +40,6 @@ def couper_section(titre, texte, max_mots=config.CHUNK_WORDS, chevauchement=conf
 
 
 def decouper(document, max_mots=config.CHUNK_WORDS, min_mots=config.MIN_CHUNK_WORDS):
-    """Liste de (titres des sections, page, texte) pour un document."""
-    # 1. unités = sections entières, ou morceaux de sections trop longues
     unites = []
     for s in document["sections"]:
         bloc = "\n".join(([s["titre"]] if s["titre"] else []) + [s["texte"]])
@@ -64,7 +48,7 @@ def decouper(document, max_mots=config.CHUNK_WORDS, min_mots=config.MIN_CHUNK_WO
         else:
             unites.extend(([s["titre"]], s["page"], m) for m in couper_section(s["titre"], s["texte"]))
 
-    # 2. regroupement des unités voisines tant que le chunk reste sous max_mots
+    # regroupement des sections voisines
     chunks = []
     for titres, page, texte in unites:
         if chunks and nb_mots(chunks[-1][2]) + nb_mots(texte) <= max_mots:
@@ -73,8 +57,7 @@ def decouper(document, max_mots=config.CHUNK_WORDS, min_mots=config.MIN_CHUNK_WO
         else:
             chunks.append([list(titres), page, texte])
 
-    # 3. un chunk trop court (ex. : introduction d'une fiche) est fusionné avec son voisin,
-    #    quitte à dépasser un peu max_mots
+    # un chunk trop court est fusionné avec son voisin
     i = 0
     while i < len(chunks) and len(chunks) > 1:
         if nb_mots(chunks[i][2]) < min_mots:
@@ -110,9 +93,8 @@ def main():
         json.dump(chunks, f, ensure_ascii=False, indent=1)
 
     tailles = sorted(nb_mots(c["text"]) for c in chunks)
-    print(f"{len(documents)} documents -> {len(chunks)} chunks ({config.CHUNKS_FILE})")
+    print(f"{len(documents)} documents, {len(chunks)} chunks")
     print(f"taille : min {tailles[0]}, médiane {tailles[len(tailles) // 2]}, max {tailles[-1]} mots")
-    print(f"chunks de moins de 100 mots : {sum(t < 100 for t in tailles)}")
 
 
 if __name__ == "__main__":

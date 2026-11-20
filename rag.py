@@ -25,7 +25,6 @@ générales et ne devine pas.
 
 
 def build_context(chunks):
-    """Les extraits, chacun précédé de son identifiant, de son titre et de sa source."""
     parts = []
     for c in chunks:
         section = f"\nSection : {', '.join(c['sections'])}" if c["sections"] else ""
@@ -59,12 +58,6 @@ def est_un_refus(reponse):
 
 
 def answer(question, k=config.TOP_K, mode="hybrid"):
-    """Recherche les extraits, génère la réponse et vérifie ses citations.
-
-    Renvoie un dictionnaire : question, reponse, sources (identifiants cités qui font partie
-    des extraits), citations_invalides (identifiants cités qui n'en font pas partie),
-    refus, chunks (extraits récupérés).
-    """
     chunks = retrieve(question, k, mode)
     if chunks:
         messages = [
@@ -76,12 +69,12 @@ def answer(question, k=config.TOP_K, mode="hybrid"):
         reponse = NOT_FOUND
 
     recuperes = [c["chunk_id"] for c in chunks]
-    cites = list(dict.fromkeys(CHUNK_ID.findall(reponse)))  # sans doublons, dans l'ordre
+    cites = list(dict.fromkeys(CHUNK_ID.findall(reponse)))
     return {
         "question": question,
         "reponse": reponse,
         "sources": [i for i in cites if i in recuperes],
-        "citations_invalides": [i for i in cites if i not in recuperes],
+        "citations_invalides": [i for i in cites if i not in recuperes],  # extraits non fournis
         "refus": est_un_refus(reponse),
         "chunks": chunks,
     }
@@ -93,7 +86,7 @@ if __name__ == "__main__":
     print(r["reponse"])
     print(f"\nSources : {', '.join(r['sources']) or 'aucune'}")
     if r["citations_invalides"]:
-        print(f"Citations invalides (extraits non fournis) : {', '.join(r['citations_invalides'])}")
+        print(f"Citations invalides : {', '.join(r['citations_invalides'])}")
     print("\nExtraits récupérés :")
     for c in r["chunks"]:
         mark = "*" if c["chunk_id"] in r["sources"] else " "

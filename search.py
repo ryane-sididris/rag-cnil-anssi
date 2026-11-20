@@ -1,10 +1,7 @@
-"""Recherche des chunks : vectorielle, plein texte, ou hybride (fusion RRF).
+"""Recherche des chunks : vectorielle, plein texte ou hybride (RRF).
 
-python search.py "Comment sécuriser les mots de passe ?"            # mode hybride, TOP_K chunks
+python search.py "Comment sécuriser les mots de passe ?"
 python search.py --mode keyword --k 10 "Comment sécuriser le wifi ?"
-
-Les scores servent seulement à classer les chunks d'une même recherche : ils ne sont pas
-comparables d'un mode à l'autre (similarité cosinus, rang plein texte, score RRF).
 """
 import argparse
 
@@ -22,7 +19,6 @@ _conn = None
 
 
 def connect():
-    """Connexion unique à la base, ouverte au premier appel."""
     global _conn
     if _conn is None or _conn.closed:
         _conn = psycopg.connect(config.DB_URL, autocommit=True)
@@ -44,7 +40,6 @@ def embed_query(query):
 
 
 def vector_search(query, k):
-    """Similarité cosinus entre la question et les chunks (bge-m3)."""
     q = embed_query(query)
     rows = connect().execute(
         f"SELECT {COLONNES}, 1 - (embedding <=> %s) AS score "
@@ -55,11 +50,8 @@ def vector_search(query, k):
 
 
 def keyword_search(query, k):
-    """Recherche plein texte PostgreSQL (racinisation française, mots vides retirés).
-
-    plainto_tsquery relie les mots par ET : on les relie par OU pour ne pas exiger
-    que tous les mots de la question soient dans le même chunk.
-    """
+    # plainto_tsquery relie les mots par ET : on les relie par OU pour ne pas
+    # exiger que tous les mots de la question soient dans le même chunk
     rows = connect().execute(
         "WITH q AS (SELECT to_tsquery('french', "
         "    replace(plainto_tsquery('french', %s)::text, ' & ', ' | ')) AS query) "
@@ -71,11 +63,8 @@ def keyword_search(query, k):
 
 
 def hybrid_search(query, k, pool=20, rrf_k=60):
-    """Reciprocal Rank Fusion : chaque chunk gagne 1 / (rrf_k + rang) dans chaque liste.
-
-    On fusionne les rangs plutôt que les scores, qui ne sont pas comparables
-    entre les deux méthodes.
-    """
+    # Reciprocal Rank Fusion : on fusionne les rangs, les scores des deux méthodes
+    # n'étant pas comparables
     scores, chunks = {}, {}
     for results in (vector_search(query, pool), keyword_search(query, pool)):
         for rank, chunk in enumerate(results, start=1):
@@ -86,10 +75,6 @@ def hybrid_search(query, k, pool=20, rrf_k=60):
 
 
 def retrieve(query, k=config.TOP_K, mode="hybrid"):
-    """Les k chunks les plus pertinents pour la question, du plus au moins pertinent.
-
-    Chaque résultat contient : score, chunk_id, document_id, title, source, page, sections, text.
-    """
     if mode == "vector":
         return vector_search(query, k)
     if mode == "keyword":
