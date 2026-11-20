@@ -121,6 +121,4 @@ config.py       paramètres
 
 ## Utilisation de l'IA
 
-## Utilisation de l'IA
-
 J'ai construit la première version du RAG (recherche hybride, génération avec citations, interface). J'ai ensuite utilisé Claude Code (mode Plan) pour restructurer le projet selon les consignes : script de préparation du corpus, découpage en chunks, refonte de l'évaluation. Je lui décrivais ce dont j'avais besoin et je vérifiais systématiquement ce qu'il générait. 
